@@ -62,7 +62,7 @@ decisão de separar em duas chamadas foi deliberada:
 Trade-off: duas chamadas = mais latência que uma só. Aceitável na v1 porque
 roda local (sem custo de API) e o ganho em controle/testabilidade compensa.
 
-## Camadas de prompt (`prompts/`)
+## Camadas de prompt (`app/prompts/`)
 
 Cada arquivo `.txt` é uma responsabilidade isolada, concatenada em
 `core/prompts.py::build_full_prompt` na ordem: identidade/comportamento →
@@ -81,8 +81,32 @@ camada isoladamente (ex.: reforçar `security_prompt.txt` sem tocar no resto).
 
 ## Pontos de extensão previstos (v2+)
 
+## Fase 07 — Por que não há deploy tradicional (web/URL pública) na v1
+
+O plano original do desafio DIO assumia uma web app com URL pública. O AXEL
+virou uma **CLI local-first**, e isso muda o que "deploy" significa:
+
+- Não existe um servidor único compartilhado — cada execução do AXEL depende
+  de um Ollama rodando *na máquina de quem usa*. Subir isso num serviço tipo
+  Render/Railway não faria sentido: o servidor remoto não teria o LLM local
+  do usuário para conversar.
+- A decisão consciente foi tratar "distribuição", não "deploy", como a meta
+  certa para uma ferramenta de linha de comando:
+  - Publicação como pacote pip (`pip install axel-tech-assistant`) — feito
+    via `pyproject.toml`, com entry point `axel` registrado como comando.
+  - Prompts movidos de `prompts/` (nível raiz) para `app/prompts/` e
+    carregados via `importlib.resources` em vez de caminho relativo em
+    disco — sem essa mudança, o pacote instalado via pip quebraria ao tentar
+    ler os arquivos de prompt (o caminho relativo só existe no clone do
+    repositório, não dentro do pacote instalado em `site-packages`).
+- Caminho de evolução natural para v2: se o AXEL ganhar uma API REST
+  (`services/` já está desacoplado o bastante para isso), aí sim um deploy
+  tradicional com URL pública volta a fazer sentido — o provider Ollama
+  seria trocado por um LLM hospedado (Fase 09/roadmap já prevê isso em
+  `core/llm.py::get_provider`).
+
 - `services/intent.py`: novas intents exigem só adicionar ao `VALID_INTENTS`
-  e ajustar `prompts/intent_prompt.txt`.
+  e ajustar `app/prompts/intent_prompt.txt`.
 - `core/memory.py`: trocar `deque` em memória por persistência (SQLite/Redis)
   sem mudar a interface pública (`add`, `as_context`).
 - `core/llm.py`: adicionar `AnthropicProvider`/`GeminiProvider` para produção.

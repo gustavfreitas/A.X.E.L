@@ -29,7 +29,7 @@ estruturada. Ver diagrama completo em `docs/architecture.md`.
 
 ## Prompt Engineering
 
-Prompts organizados por responsabilidade em `prompts/`: identidade e
+Prompts organizados por responsabilidade em `app/prompts/`: identidade e
 comportamento (`system_prompt.txt`), regras de segurança
 (`security_prompt.txt`), classificação de intenção (`intent_prompt.txt`) e
 formatação de resposta (`response_prompt.txt`).
@@ -72,6 +72,17 @@ dependência externa é o processo do Ollama.
 
 ## Installation
 
+Duas formas de instalar:
+
+**Via pip (recomendado, uma vez publicado):**
+
+```bash
+pip install axel-tech-assistant
+axel
+```
+
+**A partir do código-fonte (desenvolvimento):**
+
 ```bash
 # 1. Instalar e subir o Ollama
 # https://ollama.com
@@ -88,6 +99,10 @@ pip install -r requirements.txt
 # 3. Configurar variáveis
 cp .env.example .env
 ```
+
+Nos dois casos, o Ollama continua sendo pré-requisito rodando na máquina de
+quem usa — ver `docs/architecture.md`, seção "Por que não há deploy
+tradicional", para o raciocínio completo por trás dessa decisão.
 
 ## Usage
 

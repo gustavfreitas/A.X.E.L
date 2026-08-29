@@ -1,15 +1,23 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from pathlib import Path
+from importlib import resources
 
-PROMPTS_DIR = Path(__file__).resolve().parents[2] / "prompts"
+_PACKAGE = "app.prompts"
 
 
 @lru_cache(maxsize=None)
 def _load(filename: str) -> str:
-    path = PROMPTS_DIR / filename
-    return path.read_text(encoding="utf-8")
+    """Carrega via importlib.resources, não caminho relativo em disco.
+
+    Decisão de arquitetura: um caminho tipo Path(__file__).parents[N]/"prompts"
+    só funciona rodando direto do clone do repositório. Quebra silenciosamente
+    quando o pacote é instalado via pip (os .txt não ficam onde o caminho
+    relativo espera). importlib.resources funciona nos dois casos porque
+    resolve a partir da estrutura do pacote Python, não do sistema de
+    arquivos do projeto.
+    """
+    return resources.files(_PACKAGE).joinpath(filename).read_text(encoding="utf-8")
 
 
 def system_prompt() -> str:
