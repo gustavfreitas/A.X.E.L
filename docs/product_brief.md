@@ -47,6 +47,14 @@ cibersegurança ativa, geração de código do zero, deploy assistido. Podem vir
 - Modelos locais via Ollama têm raciocínio mais fraco que modelos de fronteira em casos
   complexos de múltiplos arquivos — o AXEL v1 assume problemas de escopo único (uma função,
   uma query, um traceback), não uma base de código inteira.
+- Memória entre mensagens tem dois backends: RAM (padrão, reseta a cada execução,
+  nada em disco) e SQLite (opt-in via `AXEL_MEMORY_BACKEND=sqlite`, sobrevive entre
+  execuções). SQLite é opt-in deliberadamente: persistir significa guardar trechos
+  de código e mensagens do usuário em texto puro em disco — trade-off de
+  conveniência vs. privacidade que deve ser escolha explícita, não padrão silencioso.
+- O corte de histórico agora considera tanto número de turnos quanto tamanho em
+  caracteres (`AXEL_MAX_HISTORY_CHARS`), para não estourar o contexto útil de um
+  modelo pequeno como `qwen2.5:1.5b` com uma única resposta de diagnóstico longa.
 - Ambiente de desenvolvimento com RAM limitada (~4GB) restringe o modelo a algo na faixa
   de 0.5B-1.5B parâmetros. Isso é uma limitação de hardware, não de arquitetura — o
   pipeline (intent → prompt → resposta) é o mesmo independente do tamanho do modelo, mas

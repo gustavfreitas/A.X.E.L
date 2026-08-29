@@ -116,6 +116,21 @@ AXEL: DIAGNÓSTICO
 ...
 ```
 
+Comandos disponíveis no CLI: `sair` (encerra), `/historico` (lista os turnos
+da sessão atual), `/limpar` (apaga o histórico).
+
+**Memória entre execuções (opcional)**: por padrão o histórico é só em RAM
+e some ao fechar o CLI. Para persistir entre execuções (útil se você fecha e
+reabre o terminal no mesmo problema), configure no `.env`:
+
+```
+AXEL_MEMORY_BACKEND=sqlite
+```
+
+Isso grava as mensagens num arquivo `axel_history.db` local (nunca vai pro
+Git — está no `.gitignore`, mesma lógica do `.env`). É opt-in de propósito:
+persistir significa guardar trechos de código em texto puro em disco.
+
 ## Deployment
 
 Não definido ainda — depende da stack final avaliada após validação do MVP
