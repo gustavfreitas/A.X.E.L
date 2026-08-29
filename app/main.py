@@ -7,6 +7,7 @@ from rich.panel import Panel
 from app.core.llm import get_provider
 from app.services.assistant import Assistant
 from app.utils.preflight import check_ollama
+from app.utils.security import InputValidationError
 
 console = Console()
 
@@ -48,6 +49,9 @@ def main() -> None:
 
         try:
             answer = assistant.handle(user_input)
+        except InputValidationError as exc:
+            console.print(f"[yellow]Entrada inválida:[/yellow] {exc}")
+            continue
         except RuntimeError as exc:
             console.print(f"[bold red]AXEL:[/bold red] {exc}")
             continue
