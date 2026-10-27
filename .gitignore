@@ -9,3 +9,4 @@ axel_history.db
 build/
 dist/
 .DS_Store
+.ruff_cache/

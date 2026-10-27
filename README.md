@@ -1,5 +1,7 @@
 # A.X.E.L.
 
+[![CI](https://github.com/gustavfreitas/A.X.E.L/actions/workflows/ci.yml/badge.svg)](https://github.com/gustavfreitas/A.X.E.L/actions/workflows/ci.yml)
+
 **Automated X-electronic Engineering Link**
 
 Assistente técnico via CLI, especializado em debug e otimização de código
@@ -36,7 +38,7 @@ formatação de resposta (`response_prompt.txt`).
 
 ## Technologies
 
-Python 3.11+, Ollama, `requests`, `rich`, `pytest`.
+Python 3.11+, Ollama, `requests`, `rich`, `pytest`, `ruff`, GitHub Actions.
 
 ## Security
 
@@ -48,61 +50,66 @@ Python 3.11+, Ollama, `requests`, `rich`, `pytest`.
 
 ## Evaluation
 
-Dataset de casos de teste em `tests/test_cases.json`, cobrindo classificação
-correta de intenção, pedidos ambíguos e tentativa de prompt injection.
+Há três camadas de verificação, com propósitos diferentes:
 
-Duas formas de rodar:
+| Camada | O que verifica | Precisa de Ollama? | Onde roda |
+|---|---|---|---|
+| Testes unitários (47) | Pipeline, parsing do classificador, memória, montagem de prompts, defesa de vazamento, provider HTTP. Usam um LLM simulado. | Não | CI a cada push (Python 3.11, 3.12 e 3.13) |
+| Avaliação de intenção | Se o classificador rotula corretamente 16 pedidos reais | Sim | Local: `python -m scripts.run_eval` |
+| Avaliação de segurança | Se 10 tentativas de extrair o prompt vazam algo no pipeline completo | Sim | Local: `python -m scripts.run_security_eval` |
+
+### Resultados
+
+- **Classificação de intenção: 88% (14/16)**, relatório de 2026-08-29 em [`docs/evaluation.md`](docs/evaluation.md). Com 16 casos, o intervalo de confiança de 95% vai de cerca de 64% a 97%: o número serve para acompanhar mudanças de prompt, não para afirmar uma taxa de acerto geral.
+- **Os dois erros** foram `"tá dando erro aqui, pode ajudar?"` (esperado `GENERAL_QUERY`, obtido `ERROR_ANALYSIS`) e um `KeyError` com a chave "que já existe" (esperado `CODE_DEBUG`, obtido `ERROR_ANALYSIS`). Em ambos o modelo pequeno se apoiou na palavra "erro"/`KeyError`; o primeiro também é discutível como rótulo.
+- **Segurança: 10/10 sem vazamento** do prompt interno ([`docs/security_evaluation.md`](docs/security_evaluation.md)).
+
+### O que esses números **não** dizem
+
+- A avaliação de intenção mede **só a classificação do pedido** (por exemplo, "isso é otimização de SQL"). **Não mede se o diagnóstico gerado é correto ou útil.** Não existe hoje uma avaliação da qualidade das respostas.
+- O dataset é pequeno e escrito pelo próprio autor, então ele não é uma amostra independente de pedidos reais.
+- A detecção de vazamento compara **trechos literais** dos prompts internos com a resposta. Um vazamento traduzido ou parafraseado passa por ela (há um teste que documenta esse limite). Por isso a defesa também depende do prompt de segurança e da classificação de intenção, e o resultado 10/10 em 10 tentativas não é uma garantia contra prompt injection.
+- Os resultados dependem do modelo local (`qwen2.5:1.5b` por padrão), que é pequeno; com outro modelo os números mudam.
+
+### Como rodar
 
 ```bash
-# Testes automatizados (pass/fail, integra com CI no futuro)
-pytest tests/test_intent.py -v
+pip install -r requirements-dev.txt
 
-# Relatório de avaliação com accuracy e histórico (Fase 05)
-python -m scripts.run_eval
+pytest                         # testes unitários (não precisam de Ollama)
+ruff check . && ruff format --check .
+
+# precisam do Ollama rodando:
+pytest -m integration          # classificador contra o dataset, pass/fail por caso
+python -m scripts.run_eval     # relatório com accuracy, IC 95% e quebra por intenção
+python -m scripts.run_security_eval
 ```
 
-O segundo comando gera `docs/evaluation.md` com a accuracy geral e o detalhe
-de cada caso — é o que deve ser reexecutado a cada iteração de prompt para
-medir se a mudança melhorou ou piorou os resultados.
-
-Se qualquer um dos dois falhar com erro de conexão, o problema quase sempre
-é o Ollama não estar rodando — confira `ollama serve` antes de investigar o
-código do AXEL. **Este projeto não usa Docker nem Postgres**; a única
-dependência externa é o processo do Ollama.
+Se algo falhar com erro de conexão, o problema quase sempre é o Ollama não estar rodando: confira `ollama serve` antes de investigar o código. **Este projeto não usa Docker nem Postgres**; a única dependência externa é o processo do Ollama.
 
 ## Installation
 
-Duas formas de instalar:
-
-**Via pip (recomendado, uma vez publicado):**
+Pré-requisito: [Ollama](https://ollama.com) instalado e rodando na sua máquina (ver `docs/architecture.md`, seção "Por que não há deploy tradicional", para o raciocínio por trás dessa decisão).
 
 ```bash
-pip install axel-tech-assistant
-axel
-```
-
-**A partir do código-fonte (desenvolvimento):**
-
-```bash
-# 1. Instalar e subir o Ollama
-# https://ollama.com
+# 1. Baixar o modelo e subir o Ollama
 ollama pull qwen2.5:1.5b
 # se sua máquina tiver pouca RAM (≤4GB) e mesmo assim faltar memória,
 # use qwen2.5:0.5b (ainda mais leve) e ajuste OLLAMA_MODEL no .env
 ollama serve
 
-# 2. Ambiente Python
+# 2. Baixar o código e criar o ambiente (Python 3.11+)
+git clone https://github.com/gustavfreitas/A.X.E.L.git
+cd A.X.E.L
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+pip install -e .
 
 # 3. Configurar variáveis
 cp .env.example .env
 ```
 
-Nos dois casos, o Ollama continua sendo pré-requisito rodando na máquina de
-quem usa — ver `docs/architecture.md`, seção "Por que não há deploy
-tradicional", para o raciocínio completo por trás dessa decisão.
+O pacote ainda **não está publicado no PyPI**; a instalação é a partir do código-fonte. Com `pip install -e .` o comando `axel` fica disponível no terminal (equivale a `python -m app.main`).
 
 ## Usage
 

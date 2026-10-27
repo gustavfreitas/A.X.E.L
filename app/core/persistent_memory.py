@@ -19,7 +19,7 @@ from contextlib import closing
 from dataclasses import dataclass
 
 from app.config import settings
-from app.core.memory import Turn
+from app.core.memory import Turn, format_context
 
 
 @dataclass
@@ -65,21 +65,7 @@ class PersistentSessionMemory:
         turns = self._recent_turns()
         if not turns:
             return ""
-        selected: list[Turn] = []
-        used = 0
-        for turn in reversed(turns):
-            turn_text = f"Usuário: {turn.user}\nAXEL ({turn.intent}): {turn.response}"
-            if used + len(turn_text) > self.max_chars and selected:
-                break
-            selected.append(turn)
-            used += len(turn_text)
-        selected.reverse()
-
-        lines = []
-        for turn in selected:
-            lines.append(f"Usuário: {turn.user}")
-            lines.append(f"AXEL ({turn.intent}): {turn.response}")
-        return "\n".join(lines)
+        return format_context(turns, self.max_chars)
 
     def clear(self) -> None:
         with closing(sqlite3.connect(self.db_path)) as conn:

@@ -25,7 +25,9 @@ def main() -> None:
 
     preflight = check_ollama()
     if not preflight.ok:
-        console.print(f"[bold red]Pré-requisito faltando:[/bold red] {preflight.message}")
+        console.print(
+            f"[bold red]Pré-requisito faltando:[/bold red] {preflight.message}"
+        )
         return
 
     try:

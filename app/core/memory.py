@@ -13,6 +13,30 @@ class Turn:
     response: str
 
 
+def format_context(turns: list[Turn], max_chars: int) -> str:
+    """Monta o contexto de histórico respeitando o orçamento de caracteres.
+
+    Percorre do turno mais recente para o mais antigo e para de incluir assim
+    que o orçamento estoura (sempre mantém pelo menos o turno mais recente).
+    Compartilhada pelos dois backends de memória para não duplicar a regra.
+    """
+    selected: list[Turn] = []
+    used = 0
+    for turn in reversed(turns):
+        turn_text = f"Usuário: {turn.user}\nAXEL ({turn.intent}): {turn.response}"
+        if used + len(turn_text) > max_chars and selected:
+            break
+        selected.append(turn)
+        used += len(turn_text)
+    selected.reverse()
+
+    lines = []
+    for turn in selected:
+        lines.append(f"Usuário: {turn.user}")
+        lines.append(f"AXEL ({turn.intent}): {turn.response}")
+    return "\n".join(lines)
+
+
 @dataclass
 class SessionMemory:
     """Histórico curto em memória — reseta a cada execução do CLI por padrão
@@ -38,25 +62,7 @@ class SessionMemory:
     def as_context(self) -> str:
         if not self._turns:
             return ""
-        # Monta de trás pra frente (mais recente primeiro) e para de incluir
-        # turnos antigos assim que o orçamento de caracteres estoura — prioriza
-        # contexto recente, que é o mais relevante pra maioria dos casos de
-        # debug/otimização (o problema "atual" da conversa).
-        selected: list[Turn] = []
-        used = 0
-        for turn in reversed(self._turns):
-            turn_text = f"Usuário: {turn.user}\nAXEL ({turn.intent}): {turn.response}"
-            if used + len(turn_text) > self.max_chars and selected:
-                break
-            selected.append(turn)
-            used += len(turn_text)
-        selected.reverse()
-
-        lines = []
-        for turn in selected:
-            lines.append(f"Usuário: {turn.user}")
-            lines.append(f"AXEL ({turn.intent}): {turn.response}")
-        return "\n".join(lines)
+        return format_context(list(self._turns), self.max_chars)
 
     def clear(self) -> None:
         self._turns.clear()
@@ -65,7 +71,7 @@ class SessionMemory:
         return list(self._turns)
 
 
-def get_memory() -> "SessionMemory":
+def get_memory() -> SessionMemory:
     """Factory: escolhe o backend de memória com base em settings.memory_backend.
 
     Mesmo padrão do core/llm.py::get_provider — ponto de extensão único, não

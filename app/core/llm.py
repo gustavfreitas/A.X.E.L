@@ -8,7 +8,6 @@ aplicação. Tudo passa pela interface LLMProvider, para que trocar de backend
 
 from __future__ import annotations
 
-import json
 from abc import ABC, abstractmethod
 from typing import Any
 

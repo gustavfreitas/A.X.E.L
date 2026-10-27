@@ -19,7 +19,9 @@ class Assistant:
     sem tocar no resto).
     """
 
-    def __init__(self, provider: LLMProvider, memory: SessionMemory | None = None) -> None:
+    def __init__(
+        self, provider: LLMProvider, memory: SessionMemory | None = None
+    ) -> None:
         self.provider = provider
         self.memory = memory or SessionMemory()
 

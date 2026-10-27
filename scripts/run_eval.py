@@ -14,12 +14,14 @@ Uso:
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
+from app.config import settings
 from app.core.llm import get_provider
 from app.services import intent as intent_service
 from app.utils.preflight import check_ollama
+from scripts.eval_utils import por_intencao, wilson_interval
 
 ROOT = Path(__file__).resolve().parents[1]
 TEST_CASES_PATH = ROOT / "tests" / "test_cases.json"
@@ -42,8 +44,7 @@ def run() -> None:
         passed = result.intent == case["expected_intent"]
         if "expected_requires_clarification" in case:
             passed = passed and (
-                result.requires_clarification
-                == case["expected_requires_clarification"]
+                result.requires_clarification == case["expected_requires_clarification"]
             )
         correct += int(passed)
         rows.append(
@@ -56,7 +57,10 @@ def run() -> None:
             }
         )
         status = "OK" if passed else "FALHOU"
-        print(f"[{status}] esperado={case['expected_intent']:<18} obtido={result.intent:<18} | {case['input'][:60]}")
+        print(
+            f"[{status}] esperado={case['expected_intent']:<18} "
+            f"obtido={result.intent:<18} | {case['input'][:60]}"
+        )
 
     accuracy = correct / len(cases) if cases else 0.0
     print(f"\nAccuracy: {correct}/{len(cases)} ({accuracy:.0%})")
@@ -66,12 +70,32 @@ def run() -> None:
 
 
 def _write_report(rows: list[dict], accuracy: float) -> None:
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
+    acertos = sum(r["passed"] for r in rows)
+    baixo, alto = wilson_interval(acertos, len(rows))
     lines = [
         "# A.X.E.L. — Relatório de Avaliação (Fase 05)",
         "",
         f"Gerado em: {timestamp}",
-        f"Accuracy de intent: **{accuracy:.0%}** ({sum(r['passed'] for r in rows)}/{len(rows)})",
+        f"Modelo: `{settings.ollama_model}` (temperatura 0)",
+        f"Accuracy de intent: **{accuracy:.0%}** ({acertos}/{len(rows)}), "
+        f"IC 95% de {baixo:.0%} a {alto:.0%}",
+        "",
+        "> O que isto mede: se o **classificador de intenção** rotula o pedido "
+        "como esperado. Não mede a qualidade do diagnóstico que o AXEL gera "
+        f"depois. Com apenas {len(rows)} casos, o intervalo é largo: mudanças "
+        "de um ou dois casos entre versões do prompt não são conclusivas.",
+        "",
+        "## Por intenção esperada",
+        "",
+        "| Intenção | Acertos |",
+        "|---|---:|",
+    ]
+    for intencao, (ok, total) in por_intencao(rows).items():
+        lines.append(f"| {intencao} | {ok}/{total} |")
+    lines += [
+        "",
+        "## Casos",
         "",
         "| Status | Esperado | Obtido | Confiança | Input |",
         "|---|---|---|---|---|",
@@ -80,7 +104,8 @@ def _write_report(rows: list[dict], accuracy: float) -> None:
         status = "✅" if row["passed"] else "❌"
         input_short = row["input"].replace("|", "\\|")[:80]
         lines.append(
-            f"| {status} | {row['expected']} | {row['got']} | {row['confidence']} | {input_short} |"
+            f"| {status} | {row['expected']} | {row['got']} | "
+            f"{row['confidence']} | {input_short} |"
         )
 
     failures = [r for r in rows if not r["passed"]]

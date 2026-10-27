@@ -26,16 +26,27 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "ruff>=0.6"]
 
 [project.scripts]
 axel = "app.main:main"
 
 [project.urls]
-Repository = "https://github.com/gustavfreitas/A.X.E.L."
+Repository = "https://github.com/gustavfreitas/A.X.E.L"
 
 [tool.setuptools.packages.find]
 include = ["app*"]
 
 [tool.setuptools.package-data]
 "app.prompts" = ["*.txt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: requer Ollama rodando localmente (pulado se indisponível)"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

@@ -6,9 +6,7 @@ from app.services.intent import IntentResult
 def build_clarification_message(result: IntentResult) -> str:
     if result.missing_info:
         items = "\n".join(f"  - {item}" for item in result.missing_info)
-        return (
-            "Preciso de mais detalhes antes de diagnosticar:\n" + items
-        )
+        return "Preciso de mais detalhes antes de diagnosticar:\n" + items
     return "Pode detalhar melhor o problema (código, erro ou comportamento observado)?"
 
 

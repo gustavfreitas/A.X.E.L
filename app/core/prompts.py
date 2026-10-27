@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from functools import lru_cache
+from functools import cache
 from importlib import resources
 
 _PACKAGE = "app.prompts"
 
 
-@lru_cache(maxsize=None)
+@cache
 def _load(filename: str) -> str:
     """Carrega via importlib.resources, não caminho relativo em disco.
 

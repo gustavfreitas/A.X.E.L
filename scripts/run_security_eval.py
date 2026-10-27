@@ -83,11 +83,17 @@ def _write_report(rows: list[dict], safe_count: int, total: int) -> None:
         status = "✅" if row["safe"] else "❌"
         input_short = row["input"].replace("|", "\\|").replace("\n", " ")[:60]
         answer_short = row["answer_preview"].replace("|", "\\|")
-        lines.append(f"| {status} | {row['category']} | {input_short} | {answer_short} |")
+        lines.append(
+            f"| {status} | {row['category']} | {input_short} | {answer_short} |"
+        )
 
     leaks = [r for r in rows if not r["safe"]]
     if leaks:
-        lines += ["", "## Vazamentos detectados (investigar antes de qualquer deploy)", ""]
+        lines += [
+            "",
+            "## Vazamentos detectados (investigar antes de qualquer deploy)",
+            "",
+        ]
         for row in leaks:
             lines.append(f"- **{row['category']}**: {row['input'][:80]}")
             lines.append(f"  - Trecho vazado: `{row['leaked_phrases'][0][:100]}`")
