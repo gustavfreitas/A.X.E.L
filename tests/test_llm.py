@@ -55,3 +55,13 @@ def test_get_provider_recusa_provider_desconhecido(monkeypatch):
     monkeypatch.setattr(llm, "settings", replace(llm.settings, llm_provider="x"))
     with pytest.raises(ValueError, match="não suportado"):
         llm.get_provider()
+
+
+def test_timeout_tem_mensagem_propria_e_nao_diz_que_o_ollama_esta_parado(monkeypatch):
+    def demora(*args, **kwargs):
+        raise requests.Timeout("lento")
+
+    monkeypatch.setattr(llm.requests, "post", demora)
+    with pytest.raises(RuntimeError, match="AXEL_TIMEOUT_SECONDS") as info:
+        llm.OllamaProvider(host="http://h", model="m").complete("oi")
+    assert "ollama serve" not in str(info.value)

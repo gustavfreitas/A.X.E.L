@@ -44,6 +44,14 @@ class OllamaProvider(LLMProvider):
                 url, json=payload, timeout=settings.request_timeout_seconds
             )
             response.raise_for_status()
+        except requests.Timeout as exc:
+            logger.error("Timeout ao chamar Ollama em %s: %s", url, exc)
+            raise RuntimeError(
+                "O Ollama demorou mais que "
+                f"{settings.request_timeout_seconds}s para responder (ele está "
+                "rodando, mas o modelo é lento nesta máquina). Aumente "
+                "AXEL_TIMEOUT_SECONDS no .env (ex.: 180) e tente de novo."
+            ) from exc
         except requests.RequestException as exc:
             logger.error("Falha ao chamar Ollama em %s: %s", url, exc)
             raise RuntimeError(
