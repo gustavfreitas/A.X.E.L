@@ -54,7 +54,7 @@ Há três camadas de verificação, com propósitos diferentes:
 
 | Camada | O que verifica | Precisa de Ollama? | Onde roda |
 |---|---|---|---|
-| Testes unitários (60+) | Pipeline, parsing do classificador, memória, montagem de prompts, defesa de vazamento, provider HTTP. Usam um LLM simulado. | Não | CI a cada push (Python 3.11, 3.12 e 3.13) |
+| Testes unitários (65+) | Pipeline, parsing do classificador, memória, montagem de prompts, defesa de vazamento, provider HTTP. Usam um LLM simulado. | Não | CI a cada push (Python 3.11, 3.12 e 3.13) |
 | Avaliação de intenção | Se o classificador rotula corretamente 16 pedidos reais | Sim | Local: `python -m scripts.run_eval` |
 | Avaliação de segurança | Se 10 tentativas de extrair o prompt vazam algo no pipeline completo | Sim | Local: `python -m scripts.run_security_eval` |
 
@@ -120,7 +120,7 @@ pip install -e ".[web]"   # ou: pip install -r requirements.txt
 python -m app.web.server  # ou, com o pacote instalado: axel-web
 ```
 
-Abre no navegador em `http://127.0.0.1:8000`: a resposta aparece em tempo real (streaming), com blocos de código com botão "Copiar", indicador de etapa ("Entendendo o seu pedido…", "Escrevendo o diagnóstico…") e botão "Nova conversa". Usa o mesmo pipeline da CLI e o mesmo Ollama local; o servidor só escuta em `127.0.0.1`, então não fica exposto na rede. É um app de uma pessoa só: uma conversa por vez.
+Abre no navegador em `http://127.0.0.1:8000`: tema escuro com vidro (glassmorphism), painel centralizado de altura fixa (só a conversa rola), resposta em tempo real (streaming), blocos de código com botão "Copiar", sugestões rápidas e botão "Nova conversa". O símbolo do projeto (`static/img/axel-logo.png`) funciona como indicador de atividade: pulsa devagar em repouso e mais rápido, com brilho ciano, enquanto o modelo responde. O front-end é separado em módulos: `app/web/static/css/` (tokens, base, layout, ícone, componentes) e `app/web/static/js/` (markdown, api, ui, main). Usa o mesmo pipeline da CLI e o mesmo Ollama local; o servidor só escuta em `127.0.0.1`, então não fica exposto na rede. É um app de uma pessoa só: uma conversa por vez.
 
 A checagem de vazamento do prompt roda sobre o texto acumulado a cada pedaço: se um trecho interno aparece, a geração é interrompida e a resposta final é substituída pela mensagem segura. Como a checagem é por trecho literal, pode escapar um pedaço curto antes do trecho completo casar.
 

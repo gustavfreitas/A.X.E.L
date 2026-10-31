@@ -1,0 +1,45 @@
+/* ==========================================================================
+   Tokens de design do A.X.E.L.
+   Toda cor, raio e tempo de transição vive aqui: mude aqui, muda em tudo.
+   ========================================================================== */
+:root {
+  /* Fundo */
+  --bg-0: #0d0b14;
+  --bg-1: #140e24;
+  --glow: rgba(124, 92, 255, 0.38);
+
+  /* Texto. O azul dos títulos é vivo (e não #0000FF) para manter contraste
+     legível sobre o fundo escuro (acima de 7:1). */
+  --ink: #f4f2fa;
+  --ink-2: rgba(244, 242, 250, 0.68);
+  --ink-3: rgba(244, 242, 250, 0.5);
+  --blue: #6c9bff;
+  --blue-strong: #4f7dff;
+  --violet: #7c5cff;
+  --cyan: #2dd4ff;
+
+  /* Vidro (glassmorphism) */
+  --glass: rgba(255, 255, 255, 0.045);
+  --glass-hover: rgba(255, 255, 255, 0.08);
+  --edge: rgba(255, 255, 255, 0.09);
+  --edge-hi: rgba(160, 150, 255, 0.42);
+
+  /* Estados */
+  --danger: #ff8aa0;
+  --ok: #5eeaa0;
+  --warn: #ffc46b;
+
+  /* Forma e movimento */
+  --r-lg: 24px;
+  --r-md: 16px;
+  --r-pill: 999px;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --t-fast: 160ms;
+  --t-base: 260ms;
+
+  --font: "Inter", "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system,
+    Roboto, sans-serif;
+  --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+
+  --col: 760px; /* largura da coluna central */
+}

@@ -1,0 +1,117 @@
+/* Estrutura da página: cabeçalho, palco central e dock flutuante.
+   A altura é sempre 100vh; nada aqui cresce além da tela. */
+.app {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr); /* conteúdo largo (chips) nunca estica a página */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden; /* recorta a cúpula de luz nas bordas da tela */
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px clamp(16px, 4vw, 40px);
+  position: relative;
+  z-index: 2;
+}
+.topbar__right { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+/* ---- Palco ---- */
+.stage { position: relative; min-height: 0; }
+
+/* A cúpula de luz: elemento de assinatura (referência do Dribbble) */
+.arc {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  width: min(1200px, 150vw);
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(13, 11, 20, 0.96) 96%, transparent 100%);
+  box-shadow:
+    0 -2px 120px 8px rgba(124, 92, 255, 0.28),
+    inset 0 2px 0 rgba(176, 160, 255, 0.3);
+  pointer-events: none;
+  transition: opacity var(--t-base) var(--ease), transform 600ms var(--ease);
+}
+.app[data-state="chat"] .arc { opacity: 0.35; transform: translateX(-50%) translateY(8%); }
+
+/* ---- Boas-vindas ---- */
+.hero {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+  height: 100%;
+  padding: 0 20px 2vh;
+}
+.hero[hidden] { display: none; }
+.hero__title {
+  margin: 0 0 14px;
+  max-width: 16ch;
+  font-size: clamp(1.9rem, 5vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  color: var(--blue);
+  text-wrap: balance;
+}
+.hero__sub {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--ink-2);
+  font-size: clamp(0.98rem, 2.2vw, 1.08rem);
+  text-wrap: pretty;
+}
+
+/* ---- Conversa (única região que rola) ---- */
+.thread {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  overflow-y: auto;
+  padding: 8px clamp(16px, 4vw, 40px) 24px;
+}
+.thread[hidden] { display: none; }
+.thread__inner {
+  width: min(var(--col), 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ---- Dock flutuante: sugestões + campo de texto ---- */
+.dock {
+  position: relative;
+  z-index: 2;
+  width: min(var(--col), calc(100% - 32px));
+  margin: 0 auto clamp(14px, 3vh, 28px);
+  padding: 10px;
+  border-radius: var(--r-lg);
+  background: rgba(20, 14, 36, 0.62);
+  border: 1px solid var(--edge);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  backdrop-filter: blur(22px) saturate(1.3);
+  transition: border-color var(--t-base) var(--ease), box-shadow var(--t-base) var(--ease);
+}
+.dock:focus-within {
+  border-color: var(--edge-hi);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.7), 0 0 0 4px rgba(108, 155, 255, 0.12);
+}
+.dock__hint { margin: 8px 6px 0; text-align: center; color: var(--ink-3); font-size: 12px; }
+
+@media (max-width: 560px) {
+  .topbar { padding-top: 14px; }
+  .badge { min-width: 0; max-width: 46vw; }
+  #badgeText { overflow: hidden; text-overflow: ellipsis; }
+  .dock__hint { display: none; } /* ganha altura útil no celular */
+}

@@ -14,6 +14,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from app.config import settings
@@ -52,6 +53,9 @@ def create_app(
                 provider or get_provider(), memory=get_memory()
             )
         return state["assistant"]
+
+    # CSS e JS da interface (componentizados em static/css e static/js)
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
     @app.get("/")
     def index() -> FileResponse:

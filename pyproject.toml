@@ -41,7 +41,7 @@ include = ["app*"]
 
 [tool.setuptools.package-data]
 "app.prompts" = ["*.txt"]
-"app.web" = ["static/*"]
+"app.web" = ["static/*", "static/css/*", "static/js/*", "static/img/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

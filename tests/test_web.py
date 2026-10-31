@@ -111,3 +111,27 @@ def test_historico_e_clear():
 def test_corpo_invalido_retorna_422(corpo):
     c, _ = cliente(ProviderStream("CODE_DEBUG", []))
     assert c.post("/api/chat", json=corpo).status_code == 422
+
+
+def test_arquivos_estaticos_da_interface_sao_servidos():
+    c, _ = cliente(ProviderStream("CODE_DEBUG", []))
+    pagina = c.get("/").text
+    for caminho in (
+        "/static/css/tokens.css",
+        "/static/css/base.css",
+        "/static/css/layout.css",
+        "/static/css/core.css",
+        "/static/css/components.css",
+        "/static/js/main.js",
+    ):
+        assert caminho in pagina, f"{caminho} não referenciado no index.html"
+        assert c.get(caminho).status_code == 200
+
+
+def test_icone_do_axel_e_servido_e_usado_na_pagina():
+    c, _ = cliente(ProviderStream("CODE_DEBUG", []))
+    pagina = c.get("/").text
+    assert "/static/img/axel-logo.png" in pagina
+    resposta = c.get("/static/img/axel-logo.png")
+    assert resposta.status_code == 200
+    assert resposta.headers["content-type"] == "image/png"

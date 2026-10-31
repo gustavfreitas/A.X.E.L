@@ -1,0 +1,69 @@
+/* ==========================================================================
+   AXEL Core: o símbolo (runa em circuito) com brilho e pulsação.
+   O tamanho vem de --core-size; o estado vem de [data-busy] no .app:
+     repouso  -> pulso lento (2s), brilho violeta
+     pensando -> pulso rápido (0,9s), brilho ciano mais forte
+   ========================================================================== */
+.core {
+  --core-size: 36px;
+  --halo: rgba(124, 92, 255, 0.55);
+  position: relative;
+  flex: none;
+  width: var(--core-size);
+  height: var(--core-size);
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+}
+
+/* Halo de luz atrás do símbolo (anima opacidade e escala: barato para a GPU) */
+.core::before {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--halo), transparent 72%);
+  animation: pulse 2s infinite ease-in-out;
+  transition: background var(--t-base) var(--ease);
+}
+
+.core__img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(108, 155, 255, 0.6)) drop-shadow(0 0 16px rgba(124, 92, 255, 0.45));
+  animation: core-breathe 2s infinite ease-in-out;
+  transition: filter var(--t-base) var(--ease);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.45; transform: scale(0.92); }
+  50%      { opacity: 1;    transform: scale(1.08); }
+}
+@keyframes core-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.04); }
+}
+
+/* ---- Pensando: o modelo local está processando ---- */
+.app[data-busy="true"] .core { --halo: rgba(45, 212, 255, 0.7); }
+.app[data-busy="true"] .core::before { animation-duration: 0.9s; }
+.app[data-busy="true"] .core__img {
+  animation-duration: 0.9s;
+  filter: hue-rotate(-28deg) brightness(1.18)
+    drop-shadow(0 0 8px rgba(45, 212, 255, 0.85)) drop-shadow(0 0 22px rgba(45, 212, 255, 0.5));
+}
+
+/* Variante grande, usada nas boas-vindas */
+.core--hero { --core-size: clamp(76px, 14vh, 120px); margin-bottom: clamp(10px, 2vh, 20px); }
+
+/* Sem animação (preferência do sistema): o estado "pensando" ainda aparece
+   como brilho ciano fixo, sem movimento. */
+@media (prefers-reduced-motion: reduce) {
+  .core::before, .core__img { animation: none; }
+  .core::before { opacity: 0.8; }
+}
