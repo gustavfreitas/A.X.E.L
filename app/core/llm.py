@@ -8,7 +8,9 @@ aplicação. Tudo passa pela interface LLMProvider, para que trocar de backend
 
 from __future__ import annotations
 
+import json
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from typing import Any
 
 import requests
@@ -24,6 +26,14 @@ class LLMProvider(ABC):
     def complete(self, prompt: str, *, temperature: float = 0.2) -> str:
         """Retorna a resposta de texto bruta do modelo para o prompt dado."""
         raise NotImplementedError
+
+    def stream(self, prompt: str, *, temperature: float = 0.2) -> Iterator[str]:
+        """Devolve a resposta em pedaços, conforme o modelo gera.
+
+        Implementação padrão: um único pedaço com a resposta completa. Providers
+        que suportam streaming de verdade (como o Ollama) sobrescrevem.
+        """
+        yield self.complete(prompt, temperature=temperature)
 
 
 class OllamaProvider(LLMProvider):
@@ -62,6 +72,46 @@ class OllamaProvider(LLMProvider):
 
         data = response.json()
         return data.get("response", "").strip()
+
+    def stream(self, prompt: str, *, temperature: float = 0.2) -> Iterator[str]:
+        url = f"{self.host}/api/generate"
+        payload: dict[str, Any] = {
+            "model": self.model,
+            "prompt": prompt,
+            "stream": True,
+            "options": {"temperature": temperature},
+        }
+        try:
+            # O timeout de leitura vale para a espera entre pedaços, não para a
+            # resposta inteira: respostas longas não estouram o limite.
+            with requests.post(
+                url,
+                json=payload,
+                stream=True,
+                timeout=settings.request_timeout_seconds,
+            ) as response:
+                response.raise_for_status()
+                for line in response.iter_lines():
+                    if not line:
+                        continue
+                    data = json.loads(line)
+                    if data.get("response"):
+                        yield data["response"]
+                    if data.get("done"):
+                        break
+        except requests.Timeout as exc:
+            logger.error("Timeout no streaming do Ollama em %s: %s", url, exc)
+            raise RuntimeError(
+                f"O Ollama ficou mais de {settings.request_timeout_seconds}s sem "
+                "responder. Aumente AXEL_TIMEOUT_SECONDS no .env e tente de novo."
+            ) from exc
+        except requests.RequestException as exc:
+            logger.error("Falha no streaming do Ollama em %s: %s", url, exc)
+            raise RuntimeError(
+                "Não foi possível falar com o Ollama. Verifique se ele está "
+                "rodando (`ollama serve`) e se o modelo foi baixado "
+                f"(`ollama pull {self.model}`)."
+            ) from exc
 
 
 def get_provider() -> LLMProvider:

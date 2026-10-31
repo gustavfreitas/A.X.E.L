@@ -38,7 +38,7 @@ formatação de resposta (`response_prompt.txt`).
 
 ## Technologies
 
-Python 3.11+, Ollama, `requests`, `rich`, `pytest`, `ruff`, GitHub Actions.
+Python 3.11+, Ollama, `requests`, `rich`, FastAPI + uvicorn (interface web), `pytest`, `ruff`, GitHub Actions.
 
 ## Security
 
@@ -54,7 +54,7 @@ Há três camadas de verificação, com propósitos diferentes:
 
 | Camada | O que verifica | Precisa de Ollama? | Onde roda |
 |---|---|---|---|
-| Testes unitários (47) | Pipeline, parsing do classificador, memória, montagem de prompts, defesa de vazamento, provider HTTP. Usam um LLM simulado. | Não | CI a cada push (Python 3.11, 3.12 e 3.13) |
+| Testes unitários (60+) | Pipeline, parsing do classificador, memória, montagem de prompts, defesa de vazamento, provider HTTP. Usam um LLM simulado. | Não | CI a cada push (Python 3.11, 3.12 e 3.13) |
 | Avaliação de intenção | Se o classificador rotula corretamente 16 pedidos reais | Sim | Local: `python -m scripts.run_eval` |
 | Avaliação de segurança | Se 10 tentativas de extrair o prompt vazam algo no pipeline completo | Sim | Local: `python -m scripts.run_security_eval` |
 
@@ -112,6 +112,19 @@ cp .env.example .env
 O pacote ainda **não está publicado no PyPI**; a instalação é a partir do código-fonte. Com `pip install -e .` o comando `axel` fica disponível no terminal (equivale a `python -m app.main`).
 
 ## Usage
+
+### Interface web (estilo chat)
+
+```bash
+pip install -e ".[web]"   # ou: pip install -r requirements.txt
+python -m app.web.server  # ou, com o pacote instalado: axel-web
+```
+
+Abre no navegador em `http://127.0.0.1:8000`: a resposta aparece em tempo real (streaming), com blocos de código com botão "Copiar", indicador de etapa ("Entendendo o seu pedido…", "Escrevendo o diagnóstico…") e botão "Nova conversa". Usa o mesmo pipeline da CLI e o mesmo Ollama local; o servidor só escuta em `127.0.0.1`, então não fica exposto na rede. É um app de uma pessoa só: uma conversa por vez.
+
+A checagem de vazamento do prompt roda sobre o texto acumulado a cada pedaço: se um trecho interno aparece, a geração é interrompida e a resposta final é substituída pela mensagem segura. Como a checagem é por trecho literal, pode escapar um pedaço curto antes do trecho completo casar.
+
+### Linha de comando
 
 ```bash
 python -m app.main

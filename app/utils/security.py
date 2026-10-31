@@ -16,6 +16,8 @@ Duas responsabilidades, deliberadamente separadas dos prompts:
 
 from __future__ import annotations
 
+from functools import lru_cache
+
 from app.core import prompts
 from app.utils.logger import get_logger
 
@@ -46,7 +48,8 @@ _CANARY_SOURCES = (
 )
 
 
-def _canary_phrases() -> list[str]:
+@lru_cache(maxsize=1)
+def _canary_phrases() -> tuple[str, ...]:
     """Extrai frases completas dos prompts internos como canários.
 
     Os arquivos .txt têm quebra de linha manual (~80 colunas) por
@@ -75,7 +78,7 @@ def _canary_phrases() -> list[str]:
                     clause = clause.strip()
                     if 30 <= len(clause) <= 150 and not clause.isupper():
                         phrases.append(clause.lower())
-    return phrases
+    return tuple(phrases)
 
 
 def check_output_leakage(response: str) -> list[str]:
