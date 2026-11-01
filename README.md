@@ -9,6 +9,10 @@ Python e queries SQL. Interpreta descrições em linguagem natural, classifica
 a intenção do pedido e responde com diagnóstico estruturado — sem inventar
 causas quando falta contexto.
 
+![Demonstração do A.X.E.L.: pergunta sobre SQL lento respondida em tempo real na interface web](docs/demo.gif)
+
+*Interface web respondendo em streaming, com o modelo `qwen2.5:1.5b` rodando localmente. O modelo é pequeno: as respostas são genéricas e a qualidade do diagnóstico depende dele.*
+
 ## Overview
 
 O AXEL nasceu como desafio do bootcamp DIO (Dados, IA Generativa e
